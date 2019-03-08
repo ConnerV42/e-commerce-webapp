@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Web;
 
 [Serializable]
@@ -28,7 +29,7 @@ public class InventoryItem
             html += "<div class='card-body'>";
             html += "<h4 class='card-title'>";
             html += this.ItemName + "</h4>";
-            html += "<h5>" + this.Price + "</h5>";
+            html += "<h5>" + this.Price.ToString("C", CultureInfo.CurrentCulture) + "</h5>";
             html += "<h5>Quantity Available: " + this.Quantity + "</h5></div>";
             html += "<div class='card-footer'>";
             html += "<small class='text-muted'>" + this.LongDescription;
@@ -43,7 +44,7 @@ public class InventoryItem
         html += "<div class='card-body'>";
         html += "<h4 class='card-title'>";
         html += "<a href=" + redirect + ">" + this.ItemName + "</a></h4>";
-        html += "<h5>" + this.Price + "</h5></div>";
+        html += "<h5>" + this.Price.ToString("C", CultureInfo.CurrentCulture) + "</h5></div>";
         html += "<div class='card-footer'>";
         html += "<small class='text-muted'>" + this.ShortDescription + "</small></div></div></div>";
         return html;

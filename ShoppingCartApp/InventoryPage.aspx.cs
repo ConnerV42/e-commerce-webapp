@@ -35,7 +35,7 @@ public partial class InventoryPage : System.Web.UI.Page
         SqlConnection connection = new SqlConnection();
         SqlCommand command;
         SqlDataReader dataReader;
-        connection.ConnectionString = "Yes, papa";
+        connection.ConnectionString = "Data Source=sql5039.site4now.net;Initial Catalog=DB_A444A7_sales;Persist Security Info=True;User ID=DB_A444A7_sales_admin;Password=Jigglypuff42";
         try
         {
             if (connection.State != ConnectionState.Closed)

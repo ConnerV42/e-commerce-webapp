@@ -11,7 +11,9 @@
         <div class="container" runat="server" id="cartParent">
             <div class="table-responsive" runat="server" id="shoppingCart"></div>
         </div>
-        <div class="container" runat="server" id="cartButtons"></div>
+        <div class="container" runat="server" id="cartButtons">
+            <asp:Button class="btn btn-outline-primary" id='AddToCart' runat='server' Text='Checkout' OnClick='Checkout_Click' />
+        </div>
     </form>
 </asp:Content>
 

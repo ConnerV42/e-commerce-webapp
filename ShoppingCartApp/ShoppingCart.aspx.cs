@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Web;
 using System.Web.UI.WebControls;
 
 public partial class ShoppingCart : System.Web.UI.Page
 {
+    public double TotalOrderPrice { get; set; }
+    public double TotalOrderWeight { get; set; }
+    public double TotalOrderQuantity { get; set; }
+    public double TotalOrderItems { get; set; }
     protected void Page_Load(object sender, EventArgs e)
     {
         var cartItems = (List<InventoryItem>) Session["InventoryItems"];
@@ -12,13 +17,15 @@ public partial class ShoppingCart : System.Web.UI.Page
         {
             var table = FillShoppingCart(cartItems);
             shoppingCart.Controls.Add(table);
-            cartButtons.Controls.Add(GenerateCheckoutButton());
         }
     }
 
     private Table FillShoppingCart(List<InventoryItem> cartItems)
     {
-        double totalCartPrice = 0;
+        TotalOrderPrice = 0;
+        TotalOrderWeight = 0;
+        TotalOrderQuantity = 0;
+        TotalOrderItems = 0;
         var table = new Table();
         table.Attributes["class"] = "table table-bordered";
         var row = new TableHeaderRow();
@@ -28,6 +35,7 @@ public partial class ShoppingCart : System.Web.UI.Page
         row.Cells.Add(AddHeaderCell("Price"));
         row.Cells.Add(AddHeaderCell("Quantity"));
         row.Cells.Add(AddHeaderCell("Weight (oz)"));
+        row.Cells.Add(AddHeaderCell("Change Item"));
         row.Cells.Add(AddHeaderCell("Delete Item"));
         table.Rows.Add(row);
 
@@ -41,28 +49,43 @@ public partial class ShoppingCart : System.Web.UI.Page
                 tblrow.Cells.Add(AddCell(item.ShoppingCartQuantity + ""));
                 tblrow.Cells.Add(AddCell(item.Weight + ""));
 
-                // remove from cart button
+                // change from cart button
                 var btnCell = new TableCell();
-                var btnRemove = new Button();
-                btnRemove.Attributes["class"] = "btn btn-outline-warning";
-                btnRemove.Text = "Delete";
-                btnRemove.Click += (theSender, evt) => RemoveFromCart_Click(theSender, evt, item.ItemId);
-                btnCell.Controls.Add(btnRemove);
+                var btn = new Button();
+                btn.Attributes["class"] = "btn btn-outline-secondary";
+                btn.Text = "Change";
+                btn.Click += (theSender, evt) =>
+                {
+                    Server.Transfer("ItemDetailPage.aspx?Item=" + HttpContext.Current.Server.UrlEncode(item.ItemId + ""));
+                };
+                btnCell.Controls.Add(btn);
+                tblrow.Cells.Add(btnCell);
+
+                // remove from cart button
+                btnCell = new TableCell();
+                btn = new Button();
+                btn.Attributes["class"] = "btn btn-outline-warning";
+                btn.Text = "Delete";
+                btn.Click += (theSender, evt) => RemoveFromCart_Click(theSender, evt, item.ItemId);
+                btnCell.Controls.Add(btn);
                 tblrow.Cells.Add(btnCell);
                 table.Rows.Add(tblrow);
 
-                // price for cart upon checkout
-                totalCartPrice += item.Price * item.ShoppingCartQuantity;
+                TotalOrderPrice += item.Price * item.ShoppingCartQuantity;
+                TotalOrderQuantity += item.ShoppingCartQuantity;
+                TotalOrderWeight += item.Weight * item.ShoppingCartQuantity;
+                TotalOrderItems++;
             }
         }
         var footer = new TableFooterRow();
-        footer.TableSection = TableRowSection.TableFooterRow;
-        footer.Cells.Add(AddCell("<strong>Cart Total: " + totalCartPrice.ToString("C", CultureInfo.CurrentCulture) + "</strong>"));
+        footer.Cells.Add(AddCell("<strong>Total Order Price: " + TotalOrderPrice.ToString("C", CultureInfo.CurrentCulture) + "</strong>"));
+        footer.Cells.Add(AddCell("<strong>Total Order Quantity: " + TotalOrderQuantity + "</strong>"));
+        footer.Cells.Add(AddCell("<strong>Total Order Weight: " + TotalOrderWeight + " oz</strong>"));
         table.Rows.Add(footer);
         return table;
     }
 
-    private void RemoveFromCart_Click(object sender, EventArgs e, int itemId)
+    protected void RemoveFromCart_Click(object sender, EventArgs e, int itemId)
     {
         var inventoryItems = (List<InventoryItem>) Session["InventoryItems"];
         foreach(var item in inventoryItems)
@@ -75,12 +98,13 @@ public partial class ShoppingCart : System.Web.UI.Page
         Response.Redirect(Request.RawUrl);
     }
 
-    private Button GenerateCheckoutButton()
+    protected void Checkout_Click(object sender, EventArgs e)
     {
-        var btn = new Button();
-        btn.Attributes["class"] = "btn btn-outline-primary";
-        btn.Text = "Checkout";
-        return btn;
+        string redirect = "Checkout.aspx?Price=" + HttpContext.Current.Server.UrlEncode(this.TotalOrderPrice + "")
+            + "&Weight=" + HttpContext.Current.Server.UrlEncode(this.TotalOrderWeight + "")
+            + "&Quantity=" + HttpContext.Current.Server.UrlEncode(this.TotalOrderQuantity + "")
+            + "&Item=" + HttpContext.Current.Server.UrlEncode(this.TotalOrderItems + "");
+        Response.Redirect(redirect);
     }
 
     private TableHeaderCell AddHeaderCell(string text)
